@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Pusher</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <h1>Data Pusher</h1>
+        <!-- Add forms and lists for managing accounts and destinations -->
+        <div>
+            <h2>Create Account</h2>
+            <form @submit.prevent="createAccount">
+                <input type="text" v-model="newAccount.email" placeholder="Email" required>
+                <input type="text" v-model="newAccount.account_name" placeholder="Account Name" required>
+                <input type="url" v-model="newAccount.website" placeholder="Website">
+                <button type="submit">Create Account</button>
+            </form>
+        </div>
+        <div>
+            <h2>Accounts</h2>
+            <ul>
+                <li v-for="account in accounts" :key="account.id">
+                    {{ account.email }} - {{ account.account_name }}
+                    <button @click="deleteAccount(account.id)">Delete</button>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <h2>Create Destination</h2>
+            <form @submit.prevent="createDestination">
+                <select v-model="newDestination.account">
+                    <option v-for="account in accounts" :value="account.id">{{ account.account_name }}</option>
+                </select>
+                <input type="url" v-model="newDestination.url" placeholder="URL" required>
+                <input type="text" v-model="newDestination.http_method" placeholder="HTTP Method" required>
+                <textarea v-model="newDestination.headers" placeholder="Headers (JSON)" required></textarea>
+                <button type="submit">Create Destination</button>
+            </form>
+        </div>
+        <div>
+            <h2>Destinations</h2>
+            <ul>
+                <li v-for="destination in destinations" :key="destination.id">
+                    {{ destination.url }} ({{ destination.http_method }})
+                    <button @click="deleteDestination(destination.id)">Delete</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                accounts: [],
+                destinations: [],
+                newAccount: {
+                    email: '',
+                    account_name: '',
+                    website: ''
+                },
+                newDestination: {
+                    account: '',
+                    url: '',
+                    http_method: '',
+                    headers: ''
+                }
+            },
+            methods: {
+                fetchAccounts() {
+                    axios.get('/api/accounts/').then(response => {
+                        this.accounts = response.data;
+                    });
+                },
+                fetchDestinations() {
+                    axios.get('/api/destinations/').then(response => {
+                        this.destinations = response.data;
+                    });
+                },
+                createAccount() {
+                    axios.post('/api/accounts/', this.newAccount).then(response => {
+                        this.fetchAccounts();
+                        this.newAccount = { email: '', account_name: '', website: '' };
+                    });
+                },
+                deleteAccount(id) {
+                    axios.delete(`/api/accounts/${id}/`).then(response => {
+                        this.fetchAccounts();
+                    });
+                },
+                createDestination() {
+                    axios.post('/api/destinations/', this.newDestination).then(response => {
+                        this.fetchDestinations();
+                        this.newDestination = { account: '', url: '', http_method: '', headers: '' };
+                    });
+                },
+                deleteDestination(id) {
+                    axios.delete(`/api/destinations/${id}/`).then(response => {
+                        this.fetchDestinations();
+                    });
+                }
+            },
+            created() {
+                this.fetchAccounts();
+                this.fetchDestinations();
+            }
+        });
+    </script>
+</body>
+</html>
+
